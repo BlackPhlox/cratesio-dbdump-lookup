@@ -114,15 +114,15 @@ impl CrateLookup for Connection {
 }
 
 //Takes  : crate_name
-//Returns: version_id,version number
+//Returns: version_id,version number, license
 #[instrument]
 pub fn get_versions(
     db: &Connection,
     crate_name: String,
     latest: bool,
-) -> Result<Vec<(String, String)>, rusqlite::Error> {
+) -> Result<Vec<(String, String, String)>, rusqlite::Error> {
     let mut q = r#"
-        SELECT versions.id, versions.num
+        SELECT versions.id, versions.num, versions.license
         FROM versions 
         LEFT JOIN crates
             ON versions.crate_id = crates.id 
@@ -143,8 +143,8 @@ pub fn get_versions(
 
     let latest_crates = stmt.query_and_then(
         [crate_name],
-        |r| -> Result<(String, String), rusqlite::Error> {
-            Ok((r.get_unwrap::<_, String>(0), r.get_unwrap::<_, String>(1)))
+        |r| -> Result<(String, String, String), rusqlite::Error> {
+            Ok((r.get_unwrap::<_, String>(0), r.get_unwrap::<_, String>(1), r.get_unwrap::<_, String>(2)))
         },
     )?;
     let mut latest = Vec::new();
